@@ -20,8 +20,6 @@ var io = require('socket.io')(server);
 mongoose.connect('mongodb://localhost:27017/authydemo');
 var db = mongoose.connection;
 
-app.set('port', (config.PORT || 1337));
-
 app.use(cookieParser());
 app.use(expressSession({'secret': config.SECRET}));
 
@@ -46,7 +44,7 @@ db.once('open', function (err) {
             collection: 'sessions'
         })
     }));
-    var port = config.PORT || 1337;
+    var port = config.PORT || 5151;
     server.listen(port);
     console.log("Magic happening on port " + port);
 });
@@ -62,6 +60,9 @@ router.route('/user/register').post(users.register);
 router.route('/logout').get(users.logout);
 router.route('/login').post(users.login);
 
+/**
+ * Authy Authentication API
+ */
 router.route('/authy/sms').post(users.sms);
 router.route('/authy/voice').post(users.voice);
 router.route('/authy/verify').post(users.verify);
@@ -70,6 +71,29 @@ router.route('/authy/onetouch').post(users.createonetouch);
 
 router.route('/loggedIn').post(users.loggedIn);
 
+/**
+ * Authy Phone Verification API
+ */
+router.route('/verification/start').post(users.requestPhoneVerification);
+router.route('/verification/verify').post(users.verifyPhoneToken);
+
+
+/**
+ * Require user to be logged in and authenticated with 2FA
+ *
+ * @param req
+ * @param res
+ * @param next
+ */
+function requirePhoneVerification(req, res, next) {
+    if (req.session.ph_verified) {
+        console.log("Phone Verified");
+        next();
+    } else {
+        console.log("Phone Not Verified");
+        res.redirect("/verification");
+    }
+}
 /**
  * Require user to be logged in and authenticated with 2FA
  *

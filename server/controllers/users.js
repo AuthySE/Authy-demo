@@ -4,10 +4,12 @@ var User = mongoose.model('User');
 var config = require('../config.js');
 var qs = require('qs');
 var request = require('request');
+var phoneReg = require('../lib/phone_verification')(config.API_KEY);
 
 // https://github.com/seegno/authy-client
 const Client = require('authy-client').Client;
 const authy = new Client({key: config.API_KEY});
+
 
 function hashPW(pwd) {
     return crypto.createHash('sha256').update(pwd).digest('base64').toString();
@@ -43,8 +45,8 @@ exports.login = function (req, res) {
  * @param res
  */
 exports.logout = function (req, res) {
-    req.session.destroy(function(err){
-        if(err){
+    req.session.destroy(function (err) {
+        if (err) {
             console.log("Error Logging Out: ", err);
             return next(err);
         }
@@ -175,7 +177,7 @@ exports.sms = function (req, res) {
                 return;
             }
             console.log("requestSMS response: ", smsRes);
-            res.status(200).json({res: smsRes});
+            res.status(200).json(smsRes);
         });
 
     });
@@ -210,7 +212,7 @@ exports.voice = function (req, res) {
                 return;
             }
             console.log("requestCall response: ", callRes);
-            res.status(200).json({res: callRes});
+            res.status(200).json(callRes);
         });
     });
 };
@@ -236,10 +238,10 @@ exports.verify = function (req, res) {
                 return;
             }
             console.log("Verify Token Response: ", tokenRes);
-            if(tokenRes.success){
+            if (tokenRes.success) {
                 req.session.authy = true;
             }
-            res.status(200).json({res: tokenRes});
+            res.status(200).json(tokenRes);
         });
     });
 };
@@ -358,6 +360,67 @@ exports.checkonetouchstatus = function (req, res) {
 };
 
 /**
+ * Register a phone
+ *
+ * @param req
+ * @param res
+ */
+exports.requestPhoneVerification = function (req, res) {
+    var phone_number = req.body.phone_number;
+    var country_code = req.body.country_code;
+    var via = req.body.via;
+
+    console.log("body: ", req.body);
+
+    if (phone_number && country_code && via) {
+        phoneReg.requestPhoneVerification(phone_number, country_code, via, function (err, response) {
+            if (err) {
+                console.log('error creating phone reg request', err);
+                res.status(500).json(err);
+            } else {
+                console.log('Success register phone API call: ', response);
+                res.status(200).json(response);
+            }
+        });
+    } else {
+        console.log('Failed in Register Phone API Call', req.body);
+        res.status(500).json({error: "Missing fields"});
+    }
+
+};
+
+/**
+ * Confirm a phone registration token
+ *
+ * @param req
+ * @param res
+ */
+exports.verifyPhoneToken = function (req, res) {
+    var country_code = req.body.country_code;
+    var phone_number = req.body.phone_number;
+    var token = req.body.token;
+    
+    if (phone_number && country_code && token) {
+        phoneReg.verifyPhoneToken(phone_number, country_code, token, function (err, response) {
+            if (err) {
+                console.log('error creating phone reg request', err);
+                res.status(500).json(err);
+            } else {
+                console.log('Confirm phone success confirming code: ', response);
+                if (response.success) {
+                    req.session.ph_verified = true;
+                }
+                res.status(200).json(err);
+            }
+
+        });
+    } else {
+        console.log('Failed in Confirm Phone request body: ', req.body);
+        res.status(500).json({error: "Missing fields"});
+    }
+};
+
+/**
  * Create the initial user session.
  *
  * @param req
@@ -371,6 +434,7 @@ function createSession(req, res, user) {
         req.session.username = user.username;
         req.session.msg = 'Authenticated as: ' + user.username;
         req.session.authy = false;
+        req.session.ph_verified = false;
         res.status(200).json();
     });
 }

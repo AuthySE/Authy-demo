@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register User - Super Simple Authy Demo</title>
+    <title>Start Phone Verification - Super Simple Authy Demo</title>
     <!--Made by an engineer for engineers-->
     <link rel="icon" type="image/png" href="/assets/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="/assets/favicon-16x16.png" sizes="16x16">
@@ -26,36 +26,20 @@
 </head>
 <body ng-app="authyDemo">
 
-<div class="container register" ng-controller="RegistrationController">
+<div class="container" ng-controller="PhoneVerificationController">
     <div class="row centered-form">
         <div class="col-xs-12 col-sm-8 col-md-4 col-sm-offset-2 col-md-offset-4">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Authy Demo Registration</h3>
+                    <h3 class="panel-title">Authy Phone Verification</h3>
                 </div>
-                <div class="panel-body">
+                <div class="panel-body" ng-show="view.start">
                     <form role="form">
                         <div class="row">
-                            <div class="col-xs-12 col-sm-12 col-md-12">
-                                <div class="form-group">
-                                    <input type="text" name="username" id="register_username"
-                                           class="form-control input-sm"
-                                           ng-model="setup.username"
-                                           placeholder="User Name">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <input type="email" name="email" id="email" class="form-control input-sm"
-                                   ng-model="setup.email"
-                                   placeholder="Email Address">
-                        </div>
-
-                        <div class="row">
-                            <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="col-xs-3 col-sm-3 col-md-3">
                                 <div class="form-group">
                                     <input type="text" name="country_code" id="country_code"
+                                           class="form-control"
                                            ng-model="setup.country_code"
                                            class="form-control input-sm"
                                            placeholder="Country Code">
@@ -64,33 +48,49 @@
                             <div class="col-xs-6 col-sm-6 col-md-6">
                                 <div class="form-group">
                                     <input type="text" name="phone_number" id="phone_number"
+                                           class="form-control"
                                            ng-model="setup.phone_number"
                                            class="form-control input-sm"
-                                           placeholder="Phone Number">
+                                           placeholder="Phone #">
                                 </div>
                             </div>
+                            <div class="col-xs-3 col-sm-3 col-md-3">
+                                <div class="form-group">
+                                    <select name="via" id="via" ng-model="setup.via"  class="form-control">
+                                        <option value="sms" selected="selected">SMS</option>
+                                        <option value="call">CALL</option>
+                                    </select>
+                                </div>
+                            </div>
+
                         </div>
 
+                        <input type="submit" value="Request Verification"
+                               ng-click="startVerification()"
+                               class="btn btn-info btn-block">
+                    </form>
+                </div>
+                <div class="panel-body" ng-hide="view.start">
+                    <form role="form">
                         <div class="row">
                             <div class="col-xs-6 col-sm-6 col-md-6">
                                 <div class="form-group">
-                                    <input type="password" name="password" id="register1_password"
-                                           ng-model="password1"
-                                           class="form-control input-sm"
-                                           placeholder="Password">
+                                    <input type="text" name="token"
+                                           id="token"
+                                           ng-model="setup.token"
+                                           class="form-control"
+                                           placeholder="Verification Token">
                                 </div>
                             </div>
                             <div class="col-xs-6 col-sm-6 col-md-6">
                                 <div class="form-group">
-                                    <input type="password" name="password_confirmation" id="password_confirmation"
-                                           ng-model="password2"
-                                           class="form-control input-sm" placeholder="Confirm Password">
+                                    <input type="submit" value="Verify Phone"
+                                           ng-click="verifyToken()"
+                                           class="btn btn-info btn-block">
                                 </div>
                             </div>
-                        </div>
 
-                        <input type="submit" value="Register" ng-click="register()" class="btn btn-info btn-block">
-                        <small style="float: right;"><a href="/login">Login</a></small>
+                        </div>
                     </form>
                 </div>
             </div>

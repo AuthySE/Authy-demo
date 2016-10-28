@@ -1,12 +1,17 @@
-# Authy Demo Site
+# Authy Demo Site - 2FA and Phone Verification
 
-A simple NodeJS and AngularJS implementation of a website that uses Authy to protect.  This app uses MongoDB as a data store.  You may have to install that as well and make sure it is up and running.
+A simple NodeJS and AngularJS implementation of a website that uses Authy to protect all assets within a folder.  Additionally, we have a simple Phone Verification demo website.
+This app uses MongoDB as a data store.  You may have to install that as well and make sure it is up and running.
 
-### Features
-- URL path protected with both user session and Authy 2FA
+#### 2FA Demo
+- URL path "/protected" is protected with both user session and Authy 2FA
 - Authy OneCode (SMS and Voice)
 - Authy SoftTokens
 - Authy OneTouch (via polling)
+
+#### Phone Verification
+- Phone Verification
+- SMS or Voice Call
 
 ### Setup
 - Clone this repo
@@ -17,10 +22,6 @@ A simple NodeJS and AngularJS implementation of a website that uses Authy to pro
 - Load the demo.env environmental variables into your shell `source demo.env`
 - Check and make sure MongoDB is up and running
 - Run `nodemon .` or `node .` from the cloned repo to run the app
-
-### Authy Library
-- In this example, we primarily use the [Authy client provided by Seegno](https://github.com/seegno/authy-client)
-- As Authy is a cloud based REST API, you're free to develop your own library.
 
 ### License
 - MIT

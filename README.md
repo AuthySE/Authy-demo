@@ -1,3 +1,5 @@
+![Authy](https://raw.githubusercontent.com/AuthySE/Authy-demo/master/authy-logo.png)
+
 # Authy Demo Site - 2FA and Phone Verification
 
 A simple NodeJS and AngularJS implementation of a website that uses Authy to protect all assets within a folder.  Additionally, we have a simple Phone Verification demo website.

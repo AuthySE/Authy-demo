@@ -149,7 +149,7 @@ exports.loggedIn = function (req, res) {
 };
 
 /**
- * Send a OneCode via SMS
+ * Request a OneCode via SMS
  *
  * @param req
  * @param res
@@ -184,7 +184,7 @@ exports.sms = function (req, res) {
 };
 
 /**
- * Make a voice call with the Authy token
+ * Request a OneCode via a voice call
  *
  * @param req
  * @param res

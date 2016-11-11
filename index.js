@@ -14,6 +14,12 @@ var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
 
+if(!config.API_KEY){
+    console.log("Please set your DEMO_AUTHY_API_KEY environment variable before proceeding.");
+    process.exit(1);
+}
+
+
 /**
  * Setup MongoDB connection.
  */

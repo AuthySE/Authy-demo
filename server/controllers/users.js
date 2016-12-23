@@ -4,6 +4,7 @@ var User = mongoose.model('User');
 var config = require('../config.js');
 var qs = require('qs');
 var request = require('request');
+var phoneReg = require('../lib/phone_verification')(config.API_KEY);
 
 // https://github.com/seegno/authy-client
 const Client = require('authy-client').Client;
@@ -330,14 +331,29 @@ function verifyCallback(req) {
  * @param res
  */
 exports.checkonetouchstatus = function (req, res) {
-    authy.getApprovalRequest({ id: req.session.uuid }, function(err, response) {
+
+    var options = {
+        url: "https://api.authy.com/onetouch/json/approval_requests/" + req.session.uuid,
+        form: {
+            "api_key": config.API_KEY
+        },
+        headers: {},
+        qs: {
+            "api_key": config.API_KEY
+        },
+        json: true,
+        jar: false,
+        strictSSL: true
+    };
+
+    request.get(options, function (err, response) {
         if (err) {
-          console.log("OneTouch Status Request Error: ", err);
-          res.status(500).json(err);
+            console.log("OneTouch Status Request Error: ", err);
+            res.status(500).json(err);
         }
         console.log("OneTouch Status Response: ", response);
-        if (response.approval_request.status === "approved") {
-          req.session.authy = true;
+        if (response.body.approval_request.status === "approved") {
+            req.session.authy = true;
         }
         res.status(200).json(response);
     });
@@ -357,15 +373,15 @@ exports.requestPhoneVerification = function (req, res) {
     console.log("body: ", req.body);
 
     if (phone_number && country_code && via) {
-      authy.startPhoneVerification({ countryCode: country_code, phone: phone_number, via }, function(err, response) {
-        if (err) {
-            console.log('error creating phone reg request', err);
-            res.status(500).json(err);
-        } else {
-            console.log('Success register phone API call: ', response);
-            res.status(200).json(response);
-        }
-      });
+        phoneReg.requestPhoneVerification(phone_number, country_code, via, function (err, response) {
+            if (err) {
+                console.log('error creating phone reg request', err);
+                res.status(500).json(err);
+            } else {
+                console.log('Success register phone API call: ', response);
+                res.status(200).json(response);
+            }
+        });
     } else {
         console.log('Failed in Register Phone API Call', req.body);
         res.status(500).json({error: "Missing fields"});
@@ -383,9 +399,9 @@ exports.verifyPhoneToken = function (req, res) {
     var country_code = req.body.country_code;
     var phone_number = req.body.phone_number;
     var token = req.body.token;
-
+    
     if (phone_number && country_code && token) {
-        authy.verifyPhone({ countryCode: country_code, phone: phone_number, token }, function(err, response) {
+        phoneReg.verifyPhoneToken(phone_number, country_code, token, function (err, response) {
             if (err) {
                 console.log('error creating phone reg request', err);
                 res.status(500).json(err);

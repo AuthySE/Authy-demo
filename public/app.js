@@ -182,5 +182,9 @@ app.controller('PhoneVerificationController', function ($scope, $http, $window, 
                 alert("Error verifying the token.  Check console for details.");
             });
     };
+
+    $scope.logout = function () {
+            $window.location.href = $window.location.origin;
+    };
 });
 

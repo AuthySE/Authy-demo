@@ -410,7 +410,7 @@ exports.verifyPhoneToken = function (req, res) {
                 if (response.success) {
                     req.session.ph_verified = true;
                 }
-                res.status(200).json(response);
+                res.status(200).json(err);
             }
 
         });

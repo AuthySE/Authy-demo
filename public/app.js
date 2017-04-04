@@ -23,7 +23,7 @@ app.controller('RegistrationController', function ($scope, $http, $window) {
     $scope.setup = {};
 
     $scope.register = function () {
-        if ($scope.password1 === $scope.password2) {
+        if ($scope.password1 === $scope.password2 && $scope.password1 !== "") {
 
             // making sure the passwords are the same and setting it on the
             // object we'll pass to the registration endpoint.

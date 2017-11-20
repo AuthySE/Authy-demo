@@ -3,15 +3,11 @@ var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var config = require('../config.js');
 var qs = require('qs');
-var request = require('request');
-var phoneReg = require('../lib/phone_verification')(config.API_KEY);
 
-// https://github.com/seegno/authy-client
-const Client = require('authy-client').Client;
-const authy = new Client({key: config.API_KEY});
+const authy = require('authy')(config.API_KEY);
 
 
-function hashPW(pwd) {
+function hashPW (pwd) {
     return crypto.createHash('sha256').update(pwd).digest('base64').toString();
 }
 
@@ -101,30 +97,27 @@ exports.register = function (req, res) {
                 res.status(500).json(err);
             } else {
 
-                authy.registerUser({
-                    countryCode: req.body.country_code,
-                    email: req.body.email,
-                    phone: req.body.phone_number
-                }, function (err, regRes) {
-                    if (err) {
-                        console.log('Error Registering User with Authy');
-                        res.status(500).json(err);
-                        return;
-                    }
-
-                    user.set('authyId', regRes.user.id);
-
-                    // Save the AuthyID into the database then request an SMS
-                    user.save(function (err) {
+                authy.register_user(req.body.email, req.body.phone_number, req.body.country_code,
+                    function (err, regRes) {
                         if (err) {
-                            console.log('error saving user in authyId registration ', err);
-                            res.session.error = err;
+                            console.log('Error Registering User with Authy');
                             res.status(500).json(err);
-                        } else {
-                            createSession(req, res, user);
+                            return;
                         }
+
+                        user.set('authyId', regRes.user.id);
+
+                        // Save the AuthyID into the database then request an SMS
+                        user.save(function (err) {
+                            if (err) {
+                                console.log('error saving user in authyId registration ', err);
+                                res.session.error = err;
+                                res.status(500).json(err);
+                            } else {
+                                createSession(req, res, user);
+                            }
+                        });
                     });
-                });
             }
         });
     });
@@ -170,7 +163,7 @@ exports.sms = function (req, res) {
          *
          * Passing force: true forces an SMS send.
          */
-        authy.requestSms({authyId: user.authyId}, {force: true}, function (err, smsRes) {
+        authy.request_sms(user.authyId, true, function (err, smsRes) {
             if (err) {
                 console.log('ERROR requestSms', err);
                 res.status(500).json(err);
@@ -179,7 +172,6 @@ exports.sms = function (req, res) {
             console.log("requestSMS response: ", smsRes);
             res.status(200).json(smsRes);
         });
-
     });
 };
 
@@ -205,7 +197,7 @@ exports.voice = function (req, res) {
          *
          * Passing force: true forces an voice call to be made
          */
-        authy.requestCall({authyId: user.authyId}, {force: true}, function (err, callRes) {
+        authy.request_call(user.authyId, true, function (err, callRes) {
             if (err) {
                 console.error('ERROR requestcall', err);
                 res.status(500).json(err);
@@ -218,7 +210,7 @@ exports.voice = function (req, res) {
 };
 
 /**
- * Verify an Authy Token
+ * Verify an Authy Code
  *
  * @param req
  * @param res
@@ -231,7 +223,9 @@ exports.verify = function (req, res) {
             console.error('Verify Token User Error: ', err);
             res.status(500).json(err);
         }
-        authy.verifyToken({authyId: user.authyId, token: req.body.token}, function (err, tokenRes) {
+
+
+        authy.verify(user.authyId, req.body.token, function (err, tokenRes) {
             if (err) {
                 console.log("Verify Token Error: ", err);
                 res.status(500).json(err);
@@ -247,7 +241,7 @@ exports.verify = function (req, res) {
 };
 
 /**
- * Create a OneTouch request.
+ * Create a Push Notification request.
  * The front-end client will poll 12 times at a frequency of 5 seconds before terminating.
  * If the status is changed to approved, it quit polling and process the user.
  *
@@ -264,23 +258,9 @@ exports.createonetouch = function (req, res) {
             res.status(500).json(err);
         }
 
-        var request = {
-            authyId: user.authyId,
-            details: {
-                hidden: {
-                    "test": "This is a"
-                },
-                visible: {
-                    "Authy ID": user.authyId,
-                    "Username": user.username,
-                    "Location": 'San Francisco, CA',
-                    "Reason": 'Demo by Authy'
-                }
-            },
-            message: 'Login requested for an Authy Demo account.'
-        };
+        var user_payload = {'message': 'Customize this push notification with your messaging'};
 
-        authy.createApprovalRequest(request, {ttl: 120}, function (oneTouchErr, oneTouchRes) {
+        authy.send_approval_request(user.authyId, user_payload, {}, null, function (oneTouchErr, oneTouchRes) {
             if (oneTouchErr) {
                 console.error("Create OneTouch Error: ", oneTouchErr);
                 res.status(500).json(oneTouchErr);
@@ -290,7 +270,6 @@ exports.createonetouch = function (req, res) {
             req.session.uuid = oneTouchRes.approval_request.uuid;
             res.status(200).json(oneTouchRes)
         });
-
     });
 };
 
@@ -303,7 +282,7 @@ exports.createonetouch = function (req, res) {
  * @param req
  * @return {Boolean}
  */
-function verifyCallback(req) {
+function verifyCallback (req) {
 
     var apiKey = config.API_KEY;
 
@@ -346,13 +325,13 @@ exports.checkonetouchstatus = function (req, res) {
         strictSSL: true
     };
 
-    request.get(options, function (err, response) {
+    authy.check_approval_status(req.session.uuid, function (err, response) {
         if (err) {
             console.log("OneTouch Status Request Error: ", err);
             res.status(500).json(err);
         }
         console.log("OneTouch Status Response: ", response);
-        if (response.body.approval_request.status === "approved") {
+        if (response.approval_request.status === "approved") {
             req.session.authy = true;
         }
         res.status(200).json(response);
@@ -372,8 +351,17 @@ exports.requestPhoneVerification = function (req, res) {
 
     console.log("body: ", req.body);
 
+    var info = {
+        via: 'sms'
+        //, locale: 'es',
+        //, custom_message: 'Here is your custom message {{code}}',
+        //, custom_code: '0051243'
+    };
+
+
     if (phone_number && country_code && via) {
-        phoneReg.requestPhoneVerification(phone_number, country_code, via, function (err, response) {
+
+        authy.phones().verification_start(phone_number, country_code, info, function (err, response) {
             if (err) {
                 console.log('error creating phone reg request', err);
                 res.status(500).json(err);
@@ -399,9 +387,10 @@ exports.verifyPhoneToken = function (req, res) {
     var country_code = req.body.country_code;
     var phone_number = req.body.phone_number;
     var token = req.body.token;
-    
+
     if (phone_number && country_code && token) {
-        phoneReg.verifyPhoneToken(phone_number, country_code, token, function (err, response) {
+
+        authy.phones().verification_check(phone_number, country_code, token, function (err, response) {
             if (err) {
                 console.log('error creating phone reg request', err);
                 res.status(500).json(err);
@@ -412,7 +401,6 @@ exports.verifyPhoneToken = function (req, res) {
                 }
                 res.status(200).json(err);
             }
-
         });
     } else {
         console.log('Failed in Confirm Phone request body: ', req.body);
@@ -427,7 +415,7 @@ exports.verifyPhoneToken = function (req, res) {
  * @param res
  * @param user
  */
-function createSession(req, res, user) {
+function createSession (req, res, user) {
     req.session.regenerate(function () {
         req.session.loggedIn = true;
         req.session.user = user.id;

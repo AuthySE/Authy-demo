@@ -129,7 +129,7 @@ app.controller('AuthyController', function ($scope, $http, $window, $interval) {
         $http.post('/api/authy/onetouchstatus')
             .success(function (data, status, headers, config) {
                 console.log("OneTouch Status: ", data);
-                if (data.body.approval_request.status === "approved") {
+                if (data.approval_request.status === "approved") {
                     $window.location.href = $window.location.origin + "/protected";
                     $interval.cancel(pollingID);
                 } else {

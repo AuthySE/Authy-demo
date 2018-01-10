@@ -1,8 +1,8 @@
-var crypto = require('crypto');
-var mongoose = require('mongoose');
-var User = mongoose.model('User');
-var config = require('../config.js');
-var qs = require('qs');
+const crypto = require('crypto');
+const mongoose = require('mongoose');
+const User = mongoose.model('User');
+const config = require('../config.js');
+const qs = require('qs');
 
 const authy = require('authy')(config.API_KEY);
 
@@ -50,21 +50,24 @@ exports.logout = function (req, res) {
     });
 };
 
+
 /**
- * Checks to see if the user is logged in and redirects appropriately
+ * Check user login status.  Redirect appropriately.
  *
  * @param req
  * @param res
  */
 exports.loggedIn = function (req, res) {
+
     if (req.session.loggedIn && req.session.authy) {
         res.status(200).json({url: "/protected"});
     } else if (req.session.loggedIn && !req.session.authy) {
         res.status(200).json({url: "/2fa"});
     } else {
-        res.status(409).send();
+        res.status(200).json({url: "/login"});
     }
 };
+
 
 /**
  * Sign up a new user.
@@ -74,7 +77,8 @@ exports.loggedIn = function (req, res) {
  */
 exports.register = function (req, res) {
 
-    var username = req.body.username;
+    let username = req.body.username;
+
     User.findOne({username: username}).exec(function (err, user) {
         if (err) {
             console.log('Rregistration Error', err);
@@ -85,6 +89,8 @@ exports.register = function (req, res) {
             res.status(409).json({err: "Username Already Registered"});
             return;
         }
+
+        console.log(user);
 
         user = new User({username: req.body.username});
 
@@ -123,24 +129,6 @@ exports.register = function (req, res) {
     });
 };
 
-
-/**
- * Check user login status.  Redirect appropriately.
- *
- * @param req
- * @param res
- */
-exports.loggedIn = function (req, res) {
-
-    if (req.session.loggedIn && req.session.authy) {
-        res.status(200).json({url: "/protected"});
-    } else if (req.session.loggedIn && !req.session.authy) {
-        res.status(200).json({url: "/2fa"});
-    } else {
-        res.status(200).json({url: "/login"});
-    }
-};
-
 /**
  * Request a OneCode via SMS
  *
@@ -148,7 +136,7 @@ exports.loggedIn = function (req, res) {
  * @param res
  */
 exports.sms = function (req, res) {
-    var username = req.session.username;
+    let username = req.session.username;
     User.findOne({username: username}).exec(function (err, user) {
         console.log("Send SMS");
         if (err) {
@@ -182,7 +170,7 @@ exports.sms = function (req, res) {
  * @param res
  */
 exports.voice = function (req, res) {
-    var username = req.session.username;
+    let username = req.session.username;
     User.findOne({username: username}).exec(function (err, user) {
         console.log("Send SMS");
         if (err) {
@@ -216,7 +204,7 @@ exports.voice = function (req, res) {
  * @param res
  */
 exports.verify = function (req, res) {
-    var username = req.session.username;
+    let username = req.session.username;
     User.findOne({username: username}).exec(function (err, user) {
         console.log("Verify Token");
         if (err) {
@@ -250,7 +238,7 @@ exports.verify = function (req, res) {
  */
 exports.createonetouch = function (req, res) {
 
-    var username = req.session.username;
+    let username = req.session.username;
     console.log("username: ", username);
     User.findOne({username: username}).exec(function (err, user) {
         if (err) {
@@ -258,7 +246,7 @@ exports.createonetouch = function (req, res) {
             res.status(500).json(err);
         }
 
-        var user_payload = {'message': 'Customize this push notification with your messaging'};
+        let user_payload = {'message': 'Customize this push notification with your messaging'};
 
         authy.send_approval_request(user.authyId, user_payload, {}, null, function (oneTouchErr, oneTouchRes) {
             if (oneTouchErr) {
@@ -284,22 +272,22 @@ exports.createonetouch = function (req, res) {
  */
 function verifyCallback (req) {
 
-    var apiKey = config.API_KEY;
+    let apiKey = config.API_KEY;
 
-    var url = req.headers['x-forwarded-proto'] + "://" + req.hostname + req.url;
-    var method = req.method;
-    var params = req.body;
+    let url = req.headers['x-forwarded-proto'] + "://" + req.hostname + req.url;
+    let method = req.method;
+    let params = req.body;
 
     // Sort the params.
-    var sorted_params = qs.stringify(params).split("&").sort().join("&").replace(/%20/g, '+');
+    let sorted_params = qs.stringify(params).split("&").sort().join("&").replace(/%20/g, '+');
 
-    var nonce = req.headers["x-authy-signature-nonce"];
-    var data = nonce + "|" + method + "|" + url + "|" + sorted_params;
+    let nonce = req.headers["x-authy-signature-nonce"];
+    let data = nonce + "|" + method + "|" + url + "|" + sorted_params;
 
-    var computed_sig = crypto.createHmac('sha256', apiKey).update(data).digest('base64');
-    var sig = req.headers["x-authy-signature"];
+    let computed_sig = crypto.createHmac('sha256', apiKey).update(data).digest('base64');
+    let sig = req.headers["x-authy-signature"];
 
-    return sig == computed_sig;
+    return sig === computed_sig;
 }
 
 /**
@@ -311,7 +299,7 @@ function verifyCallback (req) {
  */
 exports.checkonetouchstatus = function (req, res) {
 
-    var options = {
+    let options = {
         url: "https://api.authy.com/onetouch/json/approval_requests/" + req.session.uuid,
         form: {
             "api_key": config.API_KEY
@@ -345,13 +333,11 @@ exports.checkonetouchstatus = function (req, res) {
  * @param res
  */
 exports.requestPhoneVerification = function (req, res) {
-    var phone_number = req.body.phone_number;
-    var country_code = req.body.country_code;
-    var via = req.body.via;
+    let phone_number = req.body.phone_number;
+    let country_code = req.body.country_code;
+    let via = req.body.via;
 
-    console.log("body: ", req.body);
-
-    var info = {
+    let info = {
         via: 'sms'
         //, locale: 'es',
         //, custom_message: 'Here is your custom message {{code}}',
@@ -384,9 +370,9 @@ exports.requestPhoneVerification = function (req, res) {
  * @param res
  */
 exports.verifyPhoneToken = function (req, res) {
-    var country_code = req.body.country_code;
-    var phone_number = req.body.phone_number;
-    var token = req.body.token;
+    let country_code = req.body.country_code;
+    let phone_number = req.body.phone_number;
+    let token = req.body.token;
 
     if (phone_number && country_code && token) {
 

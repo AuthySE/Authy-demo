@@ -4,7 +4,8 @@
   "description": "Simple demo showing how Authy works.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -26,8 +27,8 @@
     "crypto": "0.0.3",
     "express": "^4.14.0",
     "express-session": "^1.14.1",
-    "mongodb": "^2.2.11",
-    "mongoose": "^4.6.5",
+    "mongodb": "^3.0.2",
+    "mongoose": "^5.0.2",
     "nodemon": "^1.11.0",
     "qs": "^6.3.0"
   }

@@ -336,16 +336,17 @@ exports.requestPhoneVerification = function (req, res) {
     let phone_number = req.body.phone_number;
     let country_code = req.body.country_code;
     let via = req.body.via;
+    let locale = req.body.locale;
 
     let info = {
-        via: 'sms'
-        //, locale: 'es',
+        via: via
+        , locale: locale,
         //, custom_message: 'Here is your custom message {{code}}',
         //, custom_code: '0051243'
     };
 
 
-    if (phone_number && country_code && via) {
+    if (phone_number && country_code && via && locale) {
 
         authy.phones().verification_start(phone_number, country_code, info, function (err, response) {
             if (err) {

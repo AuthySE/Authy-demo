@@ -147,7 +147,8 @@ app.controller('AuthyController', function ($scope, $http, $window, $interval) {
 app.controller('PhoneVerificationController', function ($scope, $http, $window, $timeout) {
 
     $scope.setup = {
-        via: "sms"
+        via: "sms",
+        locale: "en"
     };
     
     $scope.view = {

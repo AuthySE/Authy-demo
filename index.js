@@ -85,6 +85,10 @@ router.route('/loggedIn').post(users.loggedIn);
 router.route('/verification/start').post(users.requestPhoneVerification);
 router.route('/verification/verify').post(users.verifyPhoneToken);
 
+/**
+ * Lookups
+ */
+router.route('/lookup').post(users.lookupNumber);
 
 /**
  * Require user to be logged in and authenticated with 2FA

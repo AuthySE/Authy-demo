@@ -103,8 +103,21 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row" ng-show="info !== false">
+                            <div class="col-xs-12 col-sm-12 col-md-12">
+                                <h5>Lookup Information</h5>
+                                <pre>
+                                    {{info | json}}
+                                </pre>
+                                <p>Lookup allows you to determine if a user is signing up with a mobile number.  You may want to prevent users from registering from certain kinds of phones.</p>
+                            </div>
+                        </div>
 
-                        <input type="submit" value="Request Verification"
+                        <input type="submit" value="Lookup Registration Number"
+                               ng-click="lookup()"
+                               class="btn btn-info btn-block">
+
+                        <input type="submit" ng-disabled="disabled" value="Request Verification"
                                ng-click="startVerification()"
                                class="btn btn-info btn-block">
                     </form>

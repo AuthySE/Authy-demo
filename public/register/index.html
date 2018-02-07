@@ -88,9 +88,19 @@
                                 </div>
                             </div>
                         </div>
-
-                        <input type="submit" value="Register" ng-click="register()" class="btn btn-info btn-block">
+                        <div class="row" ng-show="info !== false">
+                            <div class="col-xs-12 col-sm-12 col-md-12">
+                                <h5>Lookup Information</h5>
+                                <pre>
+                                    {{info | json}}
+                                </pre>
+                                <p>Lookup allows you to determine if a user is signing up with a mobile number.  You may want to prevent users from registering with a landline or VOIP number.</p>
+                            </div>
+                        </div>
+                        <input type="submit" value="Lookup" ng-click="lookup()" class="btn btn-info btn-block">
+                        <input type="submit" ng-disabled="disabledRegister" value="Register" ng-click="register()" class="btn btn-info btn-block">
                         <small style="float: right;"><a href="/login">Login</a></small>
+
                     </form>
                 </div>
             </div>

@@ -21,6 +21,26 @@ app.controller('LoginController', function ($scope, $http, $window) {
 app.controller('RegistrationController', function ($scope, $http, $window) {
 
     $scope.setup = {};
+    $scope.info = false;
+    $scope.disabledRegister = true;
+
+    $scope.lookup = function () {
+        $http.post('/api/lookup', $scope.setup)
+            .success(function (data, status, headers, config) {
+                console.log("Success Lookup: ", data);
+                $scope.info = data.info.carrier;
+                if ($scope.info.type === "mobile") {
+                    $scope.disabledRegister = false;
+                    alert("Lookup has determined you are registering a mobile phone number.");
+                } else {
+                    $scope.disabledRegister = true;
+                    alert("You must register with a mobile number only.");
+                }
+            })
+            .error(function (data, status, headers, config) {
+                console.error("Failure Lookup: ", data);
+            });
+    };
 
     $scope.register = function () {
         if ($scope.password1 === $scope.password2 && $scope.password1 !== "") {
@@ -125,7 +145,7 @@ app.controller('AuthyController', function ($scope, $http, $window, $interval) {
     /**
      * Request the OneTouch status.
      */
-    function oneTouchStatus() {
+    function oneTouchStatus () {
         $http.post('/api/authy/onetouchstatus')
             .success(function (data, status, headers, config) {
                 console.log("OneTouch Status: ", data);
@@ -150,9 +170,35 @@ app.controller('PhoneVerificationController', function ($scope, $http, $window, 
         via: "sms",
         locale: "en"
     };
-    
+
     $scope.view = {
         start: true
+    };
+
+    $scope.info = false;
+    $scope.disabled = true;
+
+    $scope.lookup = function () {
+        $scope.info = false;
+        $http.post('/api/lookup', $scope.setup)
+            .success(function (data, status, headers, config) {
+                console.log("Success Lookup: ", data);
+                $scope.info = data.info.carrier;
+                if ($scope.info.type === "mobile") {
+                    $scope.disabled = false;
+                    alert("Lookup has determined you are registering a mobile phone number.");
+                } else if ($scope.info.type === "landline") {
+                    $scope.disabled = false;
+                    $scope.setup.via = "call";
+                    alert("Lookup has determined you are registering with a landline.");
+                } else {
+                    $scope.disabled = true;
+                    alert("You must register with a mobile or landline number only.  No VOIP.");
+                }
+            })
+            .error(function (data, status, headers, config) {
+                console.error("Failure Lookup: ", data);
+            });
     };
 
     /**
@@ -185,7 +231,7 @@ app.controller('PhoneVerificationController', function ($scope, $http, $window, 
     };
 
     $scope.logout = function () {
-            $window.location.href = $window.location.origin;
+        $window.location.href = $window.location.origin;
     };
 });
 

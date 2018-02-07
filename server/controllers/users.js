@@ -6,6 +6,7 @@ const qs = require('qs');
 
 const authy = require('authy')(config.API_KEY);
 
+const lookup = require('../lookup')(config.TWILIO_ACCT_SID,config.TWILIO_AUTH_TOKEN);
 
 function hashPW (pwd) {
     return crypto.createHash('sha256').update(pwd).digest('base64').toString();
@@ -394,6 +395,33 @@ exports.verifyPhoneToken = function (req, res) {
         res.status(500).json({error: "Missing fields"});
     }
 };
+
+/**
+ * Lookup a phone number
+ * @param req
+ * @param res
+ */
+exports.lookupNumber = function (req, res) {
+    let country_code = req.body.country_code;
+    let phone_number = req.body.phone_number;
+
+    if(country_code && phone_number){
+        lookup.get(phone_number,country_code, function(resp){
+            console.log("response", resp);
+            if(resp === false){
+                res.status(500).send({"success": false});
+            } else {
+                console.log("successful response", resp);
+                res.json({info: resp})
+            }
+        });
+
+    } else {
+        console.log('Failed in Register Phone API Call', req.body);
+        res.status(500).json({error: "Missing fields"});
+    }
+};
+
 
 /**
  * Create the initial user session.

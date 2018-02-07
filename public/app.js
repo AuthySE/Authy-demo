@@ -186,6 +186,7 @@ app.controller('PhoneVerificationController', function ($scope, $http, $window, 
                 $scope.info = data.info.carrier;
                 if ($scope.info.type === "mobile") {
                     $scope.disabled = false;
+                    $scope.setup.via = "sms";
                     alert("Lookup has determined you are registering a mobile phone number.");
                 } else if ($scope.info.type === "landline") {
                     $scope.disabled = false;

@@ -16,6 +16,8 @@ This app uses MongoDB as a data store.  You may have to install that as well and
 - SMS or Voice Call
 
 ### Setup
+- NOTE:  This demo works for MongoDB v3.6+
+  - If you're having issues, its probably related to the above. 
 - Clone this repo
 - Run `npm install`
 - Register for a [Twilio Account](https://www.twilio.com/).

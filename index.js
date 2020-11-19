@@ -1,18 +1,16 @@
 require('./server/model/user_model.js');
 
-var express = require('express');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-var expressSession = require('express-session');
-var mongoStore = require('connect-mongo')({session: expressSession});
-var mongoose = require('mongoose');
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const expressSession = require('express-session');
+const mongoStore = require('connect-mongo')({session: expressSession});
+const mongoose = require('mongoose');
 
-var config = require('./server/config.js');
+const config = require('./server/config.js');
 
-var app = express();
-var server = require('http').Server(app);
-var io = require('socket.io')(server);
-
+const app = express();
+const server = require('http').Server(app);
 
 if(!config.API_KEY){
     console.log("Please set your DEMO_AUTHY_API_KEY environment variable before proceeding.");
@@ -23,8 +21,12 @@ if(!config.API_KEY){
 /**
  * Setup MongoDB connection.
  */
-mongoose.connect('mongodb://localhost:27017/authydemo');
-var db = mongoose.connection;
+mongoose.connect('mongodb://localhost:27017/authydemo').then(function(){
+  console.log(" Connected to Authy Demo ");
+}).catch(err => console.error(err));
+
+
+const db = mongoose.connection;
 
 app.use(cookieParser());
 app.use(expressSession({'secret': config.SECRET}));
@@ -50,16 +52,16 @@ db.once('open', function (err) {
             collection: 'sessions'
         })
     }));
-    var port = config.PORT || 5151;
+    const port = config.PORT || 5151;
     server.listen(port);
     console.log("Magic happening on port " + port);
 });
 
 db.on('error', console.error.bind(console, 'Connection Error:'));
 
-var router = express.Router();
+const router = express.Router();
 
-var users = require('./server/controllers/users.js');
+const users = require('./server/controllers/users.js');
 
 router.route('/user/register').post(users.register);
 
@@ -83,6 +85,10 @@ router.route('/loggedIn').post(users.loggedIn);
 router.route('/verification/start').post(users.requestPhoneVerification);
 router.route('/verification/verify').post(users.verifyPhoneToken);
 
+/**
+ * Lookups
+ */
+router.route('/lookup').post(users.lookupNumber);
 
 /**
  * Require user to be logged in and authenticated with 2FA
